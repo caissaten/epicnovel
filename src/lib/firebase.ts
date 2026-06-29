@@ -82,6 +82,17 @@ export function enableLocalMode() {
   }
 }
 
+export function isConnectivityError(error: any): boolean {
+  if (!error) return false;
+  const msg = (error.message || String(error)).toLowerCase();
+  return msg.includes('timeout') || 
+         msg.includes('offline') || 
+         msg.includes('network') || 
+         msg.includes('could not reach') ||
+         msg.includes('failed-precondition') ||
+         msg.includes('unavailable');
+}
+
 // Timeout helper to prevent infinite loading of Firestore calls
 async function runWithTimeout<T>(fn: () => Promise<T>, timeoutMs: number): Promise<T> {
   let timeoutId: any;
@@ -378,7 +389,9 @@ export async function getDocs(queryRef: any): Promise<any> {
     return result;
   } catch (error) {
     console.warn("getDocs failed or timed out. Falling back to Local Mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     return getLocalDocsInternal(queryRef);
   }
 }
@@ -392,7 +405,9 @@ export async function getDoc(docRef: any): Promise<any> {
     return await runWithTimeout(() => firestoreGetDoc(docRef), 15000);
   } catch (error) {
     console.warn("getDoc failed or timed out. Falling back to Local Mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     return getLocalDocInternal(docRef);
   }
 }
@@ -432,7 +447,9 @@ export async function setDoc(docRef: any, data: any, options?: any): Promise<any
     return await runWithTimeout(() => firestoreSetDoc(docRef, sanitized, options), 15000);
   } catch (error) {
     console.warn("setDoc failed, falling back to local mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     if (colName && docId) {
       LocalDb.setDoc(colName, docId, sanitized);
     }
@@ -455,7 +472,9 @@ export async function addDoc(collectionRef: any, data: any): Promise<any> {
     return await runWithTimeout(() => firestoreAddDoc(collectionRef, sanitized), 15000);
   } catch (error) {
     console.warn("addDoc failed, falling back to local mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     if (colName) {
       const id = LocalDb.addDoc(colName, sanitized);
       return { id };
@@ -480,7 +499,9 @@ export async function updateDoc(docRef: any, data: any): Promise<any> {
     return await runWithTimeout(() => firestoreUpdateDoc(docRef, sanitized), 15000);
   } catch (error) {
     console.warn("updateDoc failed, falling back to local mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     if (colName && docId) {
       LocalDb.updateDoc(colName, docId, sanitized);
     }
@@ -502,7 +523,9 @@ export async function deleteDoc(docRef: any): Promise<any> {
     return await runWithTimeout(() => firestoreDeleteDoc(docRef), 15000);
   } catch (error) {
     console.warn("deleteDoc failed, falling back to local mode...", error);
-    enableLocalMode();
+    if (isConnectivityError(error)) {
+      enableLocalMode();
+    }
     if (colName && docId) {
       LocalDb.deleteDoc(colName, docId);
     }
