@@ -69,6 +69,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     try {
       if (activeTab === 'signin') {
         if (isLocalMode) {
+          const isDev = (import.meta as any).env?.DEV;
+          if (!isDev) {
+            setError("Koneksi ke database sedang offline atau belum terkonfigurasi. Silakan lengkapi setup Firebase Anda secara penuh untuk login.");
+            setLoading(false);
+            return;
+          }
           const user = simulateLocalLogin(email, password);
           if (user) {
             setSuccess("Masuk berhasil (Local Mode)!");
@@ -95,6 +101,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         }
 
         if (isLocalMode) {
+          const isDev = (import.meta as any).env?.DEV;
+          if (!isDev) {
+            setError("Koneksi ke database sedang offline atau belum terkonfigurasi. Silakan lengkapi setup Firebase Anda secara penuh untuk mendaftar.");
+            setLoading(false);
+            return;
+          }
           simulateLocalRegister(email, password, displayName);
           setSuccess("Pendaftaran berhasil (Local Mode)! Silakan masuk.");
           setActiveTab('signin');
@@ -120,15 +132,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Quick fill developer / admin email helper
-  const handleQuickAdminFill = () => {
-    setEmail('caissaorg@gmail.com');
-    setPassword('admin123456');
-    if (activeTab === 'signup') {
-      setDisplayName('Owner Admin');
     }
   };
 
@@ -290,16 +293,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               )}
             </button>
           </form>
-
-          {/* Quick Admin fill button */}
-          <div className="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800 text-center">
-            <button
-              onClick={handleQuickAdminFill}
-              className="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 hover:underline cursor-pointer tracking-wider uppercase"
-            >
-              ⚡ Isi Cepat Email Admin Owner (caissaorg@gmail.com)
-            </button>
-          </div>
         </div>
       </div>
     </div>
