@@ -7,6 +7,21 @@ import { db, collection, getDocs, writeBatch, doc } from './firebase';
 
 export async function seedDatabaseIfEmpty() {
   try {
+    // Self-healing check: ensure the default 'japanese' category exists
+    try {
+      const catsCol = collection(db, 'categories');
+      const catsSnap = await getDocs(catsCol);
+      const hasJapanese = catsSnap.docs.some(d => d.id === 'japanese');
+      if (!hasJapanese) {
+        console.log("Self-healing: 'japanese' category is missing. Re-inserting default Japanese category...");
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'categories', 'japanese'), { id: 'japanese', name: 'Japanese (LN)' });
+        await batch.commit();
+      }
+    } catch (err) {
+      console.warn("Self-healing check failed or not permitted:", err);
+    }
+
     // Check localStorage flag first to prevent re-seeding after manual deletion
     if (localStorage.getItem('db_seeded_v1') === 'true') {
       console.log("Database was already seeded or initialized. Skipping seeder.");
