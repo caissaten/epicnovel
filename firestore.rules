@@ -52,14 +52,14 @@ service cloud.firestore {
 
     // Bookmarks Collection Rules
     match /bookmarks/{bookmarkId} {
-      allow read, write: if isLoggedIn() && request.auth.uid == request.resource.data.userId;
-      allow delete: if isLoggedIn() && request.auth.uid == resource.data.userId;
+      allow read, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow create, update: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
     }
 
     // Reading History Collection Rules
     match /history/{historyId} {
-      allow read, write: if isLoggedIn() && request.auth.uid == request.resource.data.userId;
-      allow delete: if isLoggedIn() && request.auth.uid == resource.data.userId;
+      allow read, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow create, update: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
     }
   }
 }
