@@ -21,7 +21,7 @@ export default function Footer({ onNavigate }: FooterProps) {
               className="flex items-center gap-2 text-xl font-bold font-sans tracking-tight text-gray-900 dark:text-gray-100 cursor-pointer"
             >
               <BookOpen className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              <span>Epic<span className="text-indigo-600 dark:text-indigo-400">Novel</span></span>
+              <span>Mirai<span className="text-indigo-600 dark:text-indigo-400">Pages</span></span>
             </button>
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 max-w-sm">
               Discover, read, and track your favorite web novels, light novels, and fanfiction in an immersive, customizable reading workspace designed for story lovers.
