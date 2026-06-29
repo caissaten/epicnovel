@@ -7,11 +7,18 @@ import { db, collection, getDocs, writeBatch, doc } from './firebase';
 
 export async function seedDatabaseIfEmpty() {
   try {
+    // Check localStorage flag first to prevent re-seeding after manual deletion
+    if (localStorage.getItem('db_seeded_v1') === 'true') {
+      console.log("Database was already seeded or initialized. Skipping seeder.");
+      return;
+    }
+
     // Check if novels collection is empty
     const novelsCol = collection(db, 'novels');
     const snapshot = await getDocs(novelsCol);
     if (!snapshot.empty) {
       console.log("Database is already seeded with novels.");
+      localStorage.setItem('db_seeded_v1', 'true');
       return;
     }
 
@@ -235,6 +242,7 @@ export async function seedDatabaseIfEmpty() {
     });
 
     await batch.commit();
+    localStorage.setItem('db_seeded_v1', 'true');
     console.log("Database seeded successfully!");
   } catch (error) {
     console.error("Error seeding database:", error);
