@@ -52,13 +52,15 @@ service cloud.firestore {
 
     // Bookmarks Collection Rules
     match /bookmarks/{bookmarkId} {
-      allow read, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isLoggedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
       allow create, update: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
     }
 
     // Reading History Collection Rules
     match /history/{historyId} {
-      allow read, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isLoggedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list, delete: if isLoggedIn() && resource.data.userId == request.auth.uid;
       allow create, update: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
     }
   }
