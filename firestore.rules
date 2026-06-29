@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is an administrator
+    function isAdmin() {
+      return request.auth != null && 
+        (request.auth.token.email == 'caissaorg@gmail.com' || request.auth.token.email == 'admin@example.com');
+    }
+
+    // Helper to check if user is logged in
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Helper to check if a document is published
+    function isPublished(resource) {
+      return resource.data.visibility == 'publish' || resource.data.status == 'publish';
+    }
+
+    // Novels Collection Rules
+    match /novels/{novelId} {
+      allow read: if isAdmin() || resource.data.visibility == 'publish';
+      allow write: if isAdmin();
+    }
+
+    // Chapters Collection Rules
+    match /chapters/{chapterId} {
+      allow read: if isAdmin() || resource.data.status == 'publish';
+      allow write: if isAdmin();
+    }
+
+    // Genres, Tags, Categories, Settings Collection Rules
+    match /genres/{genreId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tags/{tagId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bookmarks Collection Rules
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if isLoggedIn() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isLoggedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    // Reading History Collection Rules
+    match /history/{historyId} {
+      allow read, write: if isLoggedIn() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isLoggedIn() && request.auth.uid == resource.data.userId;
+    }
+  }
+}

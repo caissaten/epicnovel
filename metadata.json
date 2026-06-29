@@ -1,0 +1,6 @@
+{
+  "name": "Novel Reading Platform",
+  "description": "A high-performance CMS-driven Novel Reading platform with real-time text styles, dynamic search, bookmarking, and a complete admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
