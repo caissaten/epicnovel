@@ -66,7 +66,7 @@ export default function Navbar({
               id="nav-logo-btn"
             >
               <BookOpen className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              <span>Epic<span className="text-indigo-600 dark:text-indigo-400">Novel</span></span>
+              <span>Mirai<span className="text-indigo-600 dark:text-indigo-400">Pages</span></span>
             </button>
             <div className="hidden md:ml-6 md:flex md:space-x-4">
               <button
