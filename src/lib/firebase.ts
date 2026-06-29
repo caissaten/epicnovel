@@ -339,7 +339,7 @@ export async function getDocs(queryRef: any): Promise<any> {
   }
 
   try {
-    const result = await runWithTimeout(() => firestoreGetDocs(queryRef), 3500);
+    const result = await runWithTimeout(() => firestoreGetDocs(queryRef), 15000);
     return result;
   } catch (error) {
     console.warn("getDocs failed or timed out. Falling back to Local Mode...", error);
@@ -354,7 +354,7 @@ export async function getDoc(docRef: any): Promise<any> {
   }
 
   try {
-    return await runWithTimeout(() => firestoreGetDoc(docRef), 3500);
+    return await runWithTimeout(() => firestoreGetDoc(docRef), 15000);
   } catch (error) {
     console.warn("getDoc failed or timed out. Falling back to Local Mode...", error);
     enableLocalMode();
@@ -389,7 +389,7 @@ export async function setDoc(docRef: any, data: any, options?: any): Promise<any
   }
 
   try {
-    return await runWithTimeout(() => firestoreSetDoc(docRef, sanitized, options), 3500);
+    return await runWithTimeout(() => firestoreSetDoc(docRef, sanitized, options), 15000);
   } catch (error) {
     console.warn("setDoc failed, falling back to local mode...", error);
     enableLocalMode();
@@ -405,7 +405,7 @@ export async function addDoc(collectionRef: any, data: any): Promise<any> {
   }
 
   try {
-    return await runWithTimeout(() => firestoreAddDoc(collectionRef, sanitized), 3500);
+    return await runWithTimeout(() => firestoreAddDoc(collectionRef, sanitized), 15000);
   } catch (error) {
     console.warn("addDoc failed, falling back to local mode...", error);
     enableLocalMode();
@@ -422,7 +422,7 @@ export async function updateDoc(docRef: any, data: any): Promise<any> {
   }
 
   try {
-    return await runWithTimeout(() => firestoreUpdateDoc(docRef, sanitized), 3500);
+    return await runWithTimeout(() => firestoreUpdateDoc(docRef, sanitized), 15000);
   } catch (error) {
     console.warn("updateDoc failed, falling back to local mode...", error);
     enableLocalMode();
@@ -437,7 +437,7 @@ export async function deleteDoc(docRef: any): Promise<any> {
   }
 
   try {
-    return await runWithTimeout(() => firestoreDeleteDoc(docRef), 3500);
+    return await runWithTimeout(() => firestoreDeleteDoc(docRef), 15000);
   } catch (error) {
     console.warn("deleteDoc failed, falling back to local mode...", error);
     enableLocalMode();
