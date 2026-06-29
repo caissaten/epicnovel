@@ -42,14 +42,17 @@ const firebaseConfig = {
   storageBucket: (import.meta as any).env?.VITE_FIREBASE_STORAGE_BUCKET || firebaseAppletConfig.storageBucket || "",
   messagingSenderId: (import.meta as any).env?.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseAppletConfig.messagingSenderId || "",
   appId: (import.meta as any).env?.VITE_FIREBASE_APP_ID || firebaseAppletConfig.appId || "",
-  firestoreDatabaseId: (import.meta as any).env?.VITE_FIREBASE_FIRESTORE_DATABASE_ID || firebaseAppletConfig.firestoreDatabaseId || ""
+  firestoreDatabaseId: (import.meta as any).env?.VITE_FIREBASE_FIRESTORE_DATABASE_ID || 
+    ((import.meta as any).env?.VITE_FIREBASE_PROJECT_ID ? "(default)" : (firebaseAppletConfig.firestoreDatabaseId || "(default)"))
 };
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 export const storage = getStorage(app);
 
 // ----------------------------------------------------------------------
