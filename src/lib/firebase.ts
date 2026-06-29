@@ -63,7 +63,8 @@ export const storage = getStorage(app);
 // SYSTEM-WIDE LOCAL FALLBACK / OFFLINE MODE ENGINE
 // ----------------------------------------------------------------------
 
-export let isLocalMode = false;
+const hasValidConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.projectId !== "");
+export let isLocalMode = !hasValidConfig;
 let onLocalModeCallbacks: (() => void)[] = [];
 
 export function subscribeToLocalModeChange(cb: () => void) {
@@ -74,10 +75,12 @@ export function subscribeToLocalModeChange(cb: () => void) {
 }
 
 export function enableLocalMode() {
-  if (!isLocalMode) {
+  if (!hasValidConfig && !isLocalMode) {
     isLocalMode = true;
     console.warn("SYSTEM DETECTED OFFLINE/UNCONFIGURED FIRESTORE. ENABLED LOCAL MODE FALLBACK.");
     onLocalModeCallbacks.forEach(cb => cb());
+  } else if (hasValidConfig) {
+    console.warn("Firestore operation failed or timed out, using local fallback temporarily for this request.");
   }
 }
 
@@ -195,42 +198,65 @@ export function collection(dbRef: any, name: string) {
   if (isLocalMode) {
     return { type: 'collection', name };
   }
-  return firestoreCollection(dbRef, name);
+  const realCol = firestoreCollection(dbRef, name);
+  (realCol as any)._customName = name;
+  return realCol;
 }
 
 export function doc(dbRef: any, collectionName: string, id?: string) {
   if (isLocalMode) {
     return { type: 'doc', collectionName, id };
   }
-  return firestoreDoc(dbRef, collectionName, id as string);
+  const realDoc = firestoreDoc(dbRef, collectionName, id as string);
+  (realDoc as any)._customCollectionName = collectionName;
+  (realDoc as any)._customId = id;
+  return realDoc;
 }
 
 export function query(ref: any, ...constraints: any[]) {
   if (isLocalMode) {
     return { ...ref, constraints };
   }
-  return firestoreQuery(ref, ...constraints);
+  const realQuery = firestoreQuery(ref, ...constraints);
+  
+  const customName = ref._customName;
+  if (customName) {
+    (realQuery as any)._customName = customName;
+  }
+  
+  const customConstraints = constraints
+    .map(c => c._customConstraintInfo)
+    .filter(Boolean);
+  (realQuery as any)._customConstraints = customConstraints;
+  
+  return realQuery;
 }
 
 export function where(field: string, operator: any, value: any) {
   if (isLocalMode) {
     return { type: 'where', field, operator, value };
   }
-  return firestoreWhere(field, operator, value);
+  const constraint = firestoreWhere(field, operator, value);
+  (constraint as any)._customConstraintInfo = { type: 'where', field, operator, value };
+  return constraint;
 }
 
 export function orderBy(field: string, direction: 'asc' | 'desc' = 'asc') {
   if (isLocalMode) {
     return { type: 'orderBy', field, direction };
   }
-  return firestoreOrderBy(field, direction);
+  const constraint = firestoreOrderBy(field, direction);
+  (constraint as any)._customConstraintInfo = { type: 'orderBy', field, direction };
+  return constraint;
 }
 
 export function limit(value: number) {
   if (isLocalMode) {
     return { type: 'limit', value };
   }
-  return firestoreLimit(value);
+  const constraint = firestoreLimit(value);
+  (constraint as any)._customConstraintInfo = { type: 'limit', value };
+  return constraint;
 }
 
 export function increment(value: number) {
@@ -262,11 +288,16 @@ export function writeBatch(dbRef: any) {
 
 // Fetch helper that returns collection from localDb
 function getLocalDocsInternal(queryRef: any) {
-  const colName = queryRef.name;
+  const colName = queryRef._customName || queryRef.name;
+  if (!colName) {
+    console.warn("getLocalDocsInternal: Could not determine collection name", queryRef);
+    return { empty: true, docs: [] };
+  }
   let items = LocalDb.getCollection(colName);
 
-  if (queryRef.constraints) {
-    for (const constraint of queryRef.constraints) {
+  const constraints = queryRef._customConstraints || queryRef.constraints;
+  if (constraints) {
+    for (const constraint of constraints) {
       if (constraint.type === 'where') {
         const { field, operator, value } = constraint;
         if (operator === '==') {
@@ -282,7 +313,7 @@ function getLocalDocsInternal(queryRef: any) {
     }
 
     // Apply sorting
-    for (const constraint of queryRef.constraints) {
+    for (const constraint of constraints) {
       if (constraint.type === 'orderBy') {
         const { field, direction } = constraint;
         items = items.sort((a, b) => {
@@ -306,7 +337,7 @@ function getLocalDocsInternal(queryRef: any) {
     }
 
     // Apply limit
-    for (const constraint of queryRef.constraints) {
+    for (const constraint of constraints) {
       if (constraint.type === 'limit') {
         items = items.slice(0, constraint.value);
       }
@@ -325,10 +356,16 @@ function getLocalDocsInternal(queryRef: any) {
 
 // Fetch helper that returns single document from localDb
 function getLocalDocInternal(docRef: any) {
-  const data = LocalDb.getDoc(docRef.collectionName, docRef.id);
+  const colName = docRef._customCollectionName || docRef.collectionName;
+  const docId = docRef._customId || docRef.id;
+  if (!colName || !docId) {
+    console.warn("getLocalDocInternal: Could not determine collection or document id", docRef);
+    return { exists: () => false, id: docId || '', data: () => null };
+  }
+  const data = LocalDb.getDoc(colName, docId);
   return {
     exists: () => data !== null,
-    id: docRef.id,
+    id: docId,
     data: () => data
   };
 }
@@ -383,8 +420,13 @@ function cleanUndefined(data: any): any {
 
 export async function setDoc(docRef: any, data: any, options?: any): Promise<any> {
   const sanitized = cleanUndefined(data);
+  const colName = docRef._customCollectionName || docRef.collectionName;
+  const docId = docRef._customId || docRef.id;
+
   if (isLocalMode) {
-    LocalDb.setDoc(docRef.collectionName, docRef.id, sanitized);
+    if (colName && docId) {
+      LocalDb.setDoc(colName, docId, sanitized);
+    }
     return;
   }
 
@@ -393,15 +435,22 @@ export async function setDoc(docRef: any, data: any, options?: any): Promise<any
   } catch (error) {
     console.warn("setDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    LocalDb.setDoc(docRef.collectionName, docRef.id, sanitized);
+    if (colName && docId) {
+      LocalDb.setDoc(colName, docId, sanitized);
+    }
   }
 }
 
 export async function addDoc(collectionRef: any, data: any): Promise<any> {
   const sanitized = cleanUndefined(data);
+  const colName = collectionRef._customName || collectionRef.name;
+
   if (isLocalMode) {
-    const id = LocalDb.addDoc(collectionRef.name, sanitized);
-    return { id };
+    if (colName) {
+      const id = LocalDb.addDoc(colName, sanitized);
+      return { id };
+    }
+    return { id: '' };
   }
 
   try {
@@ -409,15 +458,23 @@ export async function addDoc(collectionRef: any, data: any): Promise<any> {
   } catch (error) {
     console.warn("addDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    const id = LocalDb.addDoc(collectionRef.name, sanitized);
-    return { id };
+    if (colName) {
+      const id = LocalDb.addDoc(colName, sanitized);
+      return { id };
+    }
+    return { id: '' };
   }
 }
 
 export async function updateDoc(docRef: any, data: any): Promise<any> {
   const sanitized = cleanUndefined(data);
+  const colName = docRef._customCollectionName || docRef.collectionName;
+  const docId = docRef._customId || docRef.id;
+
   if (isLocalMode) {
-    LocalDb.updateDoc(docRef.collectionName, docRef.id, sanitized);
+    if (colName && docId) {
+      LocalDb.updateDoc(colName, docId, sanitized);
+    }
     return;
   }
 
@@ -426,13 +483,20 @@ export async function updateDoc(docRef: any, data: any): Promise<any> {
   } catch (error) {
     console.warn("updateDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    LocalDb.updateDoc(docRef.collectionName, docRef.id, sanitized);
+    if (colName && docId) {
+      LocalDb.updateDoc(colName, docId, sanitized);
+    }
   }
 }
 
 export async function deleteDoc(docRef: any): Promise<any> {
+  const colName = docRef._customCollectionName || docRef.collectionName;
+  const docId = docRef._customId || docRef.id;
+
   if (isLocalMode) {
-    LocalDb.deleteDoc(docRef.collectionName, docRef.id);
+    if (colName && docId) {
+      LocalDb.deleteDoc(colName, docId);
+    }
     return;
   }
 
@@ -441,7 +505,9 @@ export async function deleteDoc(docRef: any): Promise<any> {
   } catch (error) {
     console.warn("deleteDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    LocalDb.deleteDoc(docRef.collectionName, docRef.id);
+    if (colName && docId) {
+      LocalDb.deleteDoc(colName, docId);
+    }
   }
 }
 
