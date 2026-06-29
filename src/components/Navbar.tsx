@@ -5,9 +5,10 @@
 
 import React, { useState } from 'react';
 import { BookOpen, Search, User, LogOut, LayoutDashboard, SlidersHorizontal, LogIn, Menu, X } from 'lucide-react';
-import { auth } from '../lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
+import { auth, signOut } from '../lib/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
 import { isAdmin } from '../config/admin';
+import AuthModal from './AuthModal';
 
 interface NavbarProps {
   currentUser: FirebaseUser | null;
@@ -26,14 +27,10 @@ export default function Navbar({
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const handleLogin = () => {
+    setAuthModalOpen(true);
   };
 
   const handleLogout = async () => {
@@ -269,12 +266,13 @@ export default function Navbar({
                 id="nav-login-mobile"
               >
                 <LogIn className="h-4 w-4" />
-                <span>Login with Google</span>
+                <span>Masuk / Daftar</span>
               </button>
             )}
           </div>
         </div>
       )}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </nav>
   );
 }

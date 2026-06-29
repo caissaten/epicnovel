@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, collection, getDocs, query, where, orderBy, limit, isLocalMode } from '../lib/firebase';
 import { seedDatabaseIfEmpty } from '../lib/dbSeeder';
 import { Novel, Chapter, Genre, Category } from '../types';
 import NovelCard from '../components/NovelCard';
@@ -100,6 +99,12 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="bg-gray-50 dark:bg-[#050811] min-h-screen pb-16 transition-colors duration-200" id="home-page-container">
+      {/* Local Mode Notice */}
+      {isLocalMode && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 py-3 px-4 sm:px-6 lg:px-8 text-center text-xs text-amber-600 dark:text-amber-400 font-medium">
+          ⚠️ Mode Lokal Aktif (Firestore offline/belum dibuat). Novel yang Anda buat atau edit disimpan di browser Anda.
+        </div>
+      )}
       {/* Banner/Hero Section */}
       {featuredNovel && (
         <div className="relative overflow-hidden bg-gray-900 text-white border-b border-gray-800" id="hero-banner-section">

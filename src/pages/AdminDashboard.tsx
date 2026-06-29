@@ -5,10 +5,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  collection, getDocs, doc, setDoc, updateDoc, deleteDoc, writeBatch, query, where, orderBy, getDoc 
-} from 'firebase/firestore';
+  db, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, writeBatch, query, where, orderBy, getDoc 
+} from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../lib/firebase';
+import { storage } from '../lib/firebase';
 import { Novel, Chapter, Genre, Tag, Category, SiteSettings } from '../types';
 import RichTextEditor from '../components/RichTextEditor';
 import { 

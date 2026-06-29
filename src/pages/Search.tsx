@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, collection, getDocs } from '../lib/firebase';
 import { Novel, Genre, Tag, Category } from '../types';
 import NovelCard from '../components/NovelCard';
 import { Search as SearchIcon, SlidersHorizontal, ArrowUpDown, RefreshCw, Layers, BookOpen } from 'lucide-react';

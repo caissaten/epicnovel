@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth } from './lib/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
+import { auth, onAuthStateChanged } from './lib/firebase';
 import { isAdmin } from './config/admin';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AuthModal from './components/AuthModal';
 
 // Pages
 import Home from './pages/Home';
@@ -18,11 +19,11 @@ import Search from './pages/Search';
 import AdminDashboard from './pages/AdminDashboard';
 
 import { BookOpen, ShieldAlert, LogIn, ArrowLeft } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Read dark mode state from localStorage, defaulting to true for Elegant Dark
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -74,13 +75,8 @@ export default function App() {
     setDarkMode(!darkMode);
   };
 
-  const handleAdminLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      console.error("Admin login popup failed", e);
-    }
+  const handleAdminLogin = () => {
+    setAuthModalOpen(true);
   };
 
   // Simple routing matcher
@@ -208,6 +204,9 @@ export default function App() {
       {!isReaderPage && (
         <Footer onNavigate={navigate} />
       )}
+
+      {/* Reusable Auth Modal */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }

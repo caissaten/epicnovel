@@ -5,9 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  collection, getDocs, doc, getDoc, setDoc, deleteDoc, updateDoc, query, where, orderBy, increment 
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
+  db, collection, getDocs, doc, getDoc, setDoc, deleteDoc, updateDoc, query, where, orderBy, increment
+} from '../lib/firebase';
 import { Novel, Chapter, Genre, Tag, Category, Bookmark, ReadingHistory } from '../types';
 import { User as FirebaseUser } from 'firebase/auth';
 import { 

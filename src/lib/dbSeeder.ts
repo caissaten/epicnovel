@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, collection, getDocs, writeBatch, doc } from './firebase';
 
 export async function seedDatabaseIfEmpty() {
   try {
