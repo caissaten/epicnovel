@@ -64,12 +64,14 @@ export default function NovelDetail({ novelSlug, onNavigate, currentUser }: Nove
         // 3. Fetch Chapters of this novel
         const chQuery = query(
           collection(db, 'chapters'),
-          where('novelId', '==', novelSlug),
-          where('status', '==', 'publish'),
-          orderBy('chapterNumber', 'asc')
+          where('novelId', '==', novelSlug)
         );
         const chSnap = await getDocs(chQuery);
-        setChapters(chSnap.docs.map(d => d.data() as Chapter));
+        const chaptersList = chSnap.docs
+          .map(d => d.data() as Chapter)
+          .filter(ch => ch.status === 'publish')
+          .sort((a, b) => a.chapterNumber - b.chapterNumber);
+        setChapters(chaptersList);
 
         // 4. Fetch related novels (sharing at least one genre or category)
         const allNovelsSnap = await getDocs(query(collection(db, 'novels'), where('visibility', '==', 'publish')));

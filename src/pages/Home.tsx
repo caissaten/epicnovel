@@ -60,12 +60,15 @@ export default function Home({ onNavigate }: HomeProps) {
         // 3. Fetch Latest Chapters
         const chaptersQuery = query(
           collection(db, 'chapters'),
-          where('status', '==', 'publish'),
           orderBy('createdAt', 'desc'),
-          limit(6)
+          limit(30)
         );
         const chaptersSnap = await getDocs(chaptersQuery);
-        setLatestChapters(chaptersSnap.docs.map(doc => doc.data() as Chapter));
+        const chaptersList = chaptersSnap.docs
+          .map(doc => doc.data() as Chapter)
+          .filter(ch => ch.status === 'publish')
+          .slice(0, 6);
+        setLatestChapters(chaptersList);
 
       } catch (error) {
         console.error("Error loading home data:", error);

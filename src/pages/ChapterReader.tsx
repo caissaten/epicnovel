@@ -76,12 +76,13 @@ export default function ChapterReader({ chapterSlug, onNavigate, currentUser }: 
         // 2. Fetch all chapters of this novel for index & next/prev checks
         const chQuery = query(
           collection(db, 'chapters'),
-          where('novelId', '==', novelSlug),
-          where('status', '==', 'publish'),
-          orderBy('chapterNumber', 'asc')
+          where('novelId', '==', novelSlug)
         );
         const chSnap = await getDocs(chQuery);
-        const chaptersList = chSnap.docs.map(d => d.data() as Chapter);
+        const chaptersList = chSnap.docs
+          .map(d => d.data() as Chapter)
+          .filter(ch => ch.status === 'publish')
+          .sort((a, b) => a.chapterNumber - b.chapterNumber);
         setAllChapters(chaptersList);
 
         // 3. Find target chapter

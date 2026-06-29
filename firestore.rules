@@ -19,13 +19,13 @@ service cloud.firestore {
 
     // Novels Collection Rules
     match /novels/{novelId} {
-      allow read: if isAdmin() || resource.data.visibility == 'publish';
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     // Chapters Collection Rules
     match /chapters/{chapterId} {
-      allow read: if isAdmin() || resource.data.status == 'publish';
+      allow read: if true;
       allow write: if isAdmin();
     }
 
