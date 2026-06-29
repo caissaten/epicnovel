@@ -34,6 +34,10 @@ import { LocalDb } from './localDb';
 // Import local auto-generated Firebase Config directly
 import firebaseAppletConfig from '../../firebase-applet-config.json';
 
+// Detect if we are running inside the official Google AI Studio workspace container
+const isAiStudioContainer = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('asia-east1.run.app') || window.location.hostname.includes('localhost'));
+
 // Use environment variables if defined, otherwise fall back to the statically-loaded JSON config
 const firebaseConfig = {
   apiKey: (import.meta as any).env?.VITE_FIREBASE_API_KEY || firebaseAppletConfig.apiKey || "",
@@ -43,7 +47,7 @@ const firebaseConfig = {
   messagingSenderId: (import.meta as any).env?.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseAppletConfig.messagingSenderId || "",
   appId: (import.meta as any).env?.VITE_FIREBASE_APP_ID || firebaseAppletConfig.appId || "",
   firestoreDatabaseId: (import.meta as any).env?.VITE_FIREBASE_FIRESTORE_DATABASE_ID || 
-    ((import.meta as any).env?.VITE_FIREBASE_PROJECT_ID ? "(default)" : (firebaseAppletConfig.firestoreDatabaseId || "(default)"))
+    (isAiStudioContainer ? (firebaseAppletConfig.firestoreDatabaseId || "(default)") : "(default)")
 };
 
 // Initialize Firebase
@@ -358,49 +362,71 @@ export async function getDoc(docRef: any): Promise<any> {
   }
 }
 
+// Helper to sanitize objects for Firestore (removes undefined fields)
+function cleanUndefined(data: any): any {
+  if (data === null || data === undefined) return data;
+  if (Array.isArray(data)) {
+    return data.map(item => cleanUndefined(item));
+  }
+  if (typeof data === 'object' && !(data instanceof Date)) {
+    const cleaned: any = {};
+    for (const key of Object.keys(data)) {
+      const val = data[key];
+      if (val !== undefined) {
+        cleaned[key] = cleanUndefined(val);
+      }
+    }
+    return cleaned;
+  }
+  return data;
+}
+
 export async function setDoc(docRef: any, data: any, options?: any): Promise<any> {
+  const sanitized = cleanUndefined(data);
   if (isLocalMode) {
-    LocalDb.setDoc(docRef.collectionName, docRef.id, data);
+    LocalDb.setDoc(docRef.collectionName, docRef.id, sanitized);
     return;
   }
 
   try {
-    return await runWithTimeout(() => firestoreSetDoc(docRef, data, options), 3500);
+    return await runWithTimeout(() => firestoreSetDoc(docRef, sanitized, options), 3500);
   } catch (error) {
     console.warn("setDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    LocalDb.setDoc(docRef.collectionName, docRef.id, data);
+    LocalDb.setDoc(docRef.collectionName, docRef.id, sanitized);
   }
 }
 
 export async function addDoc(collectionRef: any, data: any): Promise<any> {
+  const sanitized = cleanUndefined(data);
   if (isLocalMode) {
-    const id = LocalDb.addDoc(collectionRef.name, data);
+    const id = LocalDb.addDoc(collectionRef.name, sanitized);
     return { id };
   }
 
   try {
-    return await runWithTimeout(() => firestoreAddDoc(collectionRef, data), 3500);
+    return await runWithTimeout(() => firestoreAddDoc(collectionRef, sanitized), 3500);
   } catch (error) {
     console.warn("addDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    const id = LocalDb.addDoc(collectionRef.name, data);
+    const id = LocalDb.addDoc(collectionRef.name, sanitized);
     return { id };
   }
 }
 
 export async function updateDoc(docRef: any, data: any): Promise<any> {
+  const sanitized = cleanUndefined(data);
   if (isLocalMode) {
-    LocalDb.updateDoc(docRef.collectionName, docRef.id, data);
+    LocalDb.updateDoc(docRef.collectionName, docRef.id, sanitized);
     return;
   }
 
   try {
-    return await runWithTimeout(() => firestoreUpdateDoc(docRef, data), 3500);
+    return await runWithTimeout(() => firestoreUpdateDoc(docRef, sanitized), 3500);
   } catch (error) {
     console.warn("updateDoc failed, falling back to local mode...", error);
     enableLocalMode();
-    LocalDb.updateDoc(docRef.collectionName, docRef.id, data);
+    LocalDb.updateDoc(docRef.collectionName, docRef.id, sanitized);
   }
 }
 
