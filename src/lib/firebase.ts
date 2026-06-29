@@ -75,12 +75,10 @@ export function subscribeToLocalModeChange(cb: () => void) {
 }
 
 export function enableLocalMode() {
-  if (!hasValidConfig && !isLocalMode) {
+  if (!isLocalMode) {
     isLocalMode = true;
-    console.warn("SYSTEM DETECTED OFFLINE/UNCONFIGURED FIRESTORE. ENABLED LOCAL MODE FALLBACK.");
+    console.warn("SYSTEM FALLBACK: ENABLED LOCAL MODE FALLBACK GLOBALLY FOR THIS SESSION.");
     onLocalModeCallbacks.forEach(cb => cb());
-  } else if (hasValidConfig) {
-    console.warn("Firestore operation failed or timed out, using local fallback temporarily for this request.");
   }
 }
 
