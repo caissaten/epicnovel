@@ -31,8 +31,7 @@
  * ```
  */
 export const ADMIN_EMAILS = [
-  "caissaorg@gmail.com",   // The user's logged-in email from metadata
-  "admin@example.com",     // Default fallback admin
+  "caissaorg@gmail.com"
 ];
 
 /**
