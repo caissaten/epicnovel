@@ -381,35 +381,118 @@ function getLocalDocInternal(docRef: any) {
 
 export async function getDocs(queryRef: any): Promise<any> {
   if (isLocalMode) {
-    return getLocalDocsInternal(queryRef);
+    const localResult = getLocalDocsInternal(queryRef);
+    return {
+      empty: localResult.empty,
+      docs: localResult.docs.map((doc: any) => ({
+        id: doc.id,
+        exists: doc.exists,
+        data: () => sanitizeDocumentData(doc.data())
+      }))
+    };
   }
 
   try {
     const result = await runWithTimeout(() => firestoreGetDocs(queryRef), 15000);
-    return result;
+    return {
+      empty: result.empty,
+      metadata: result.metadata,
+      query: result.query,
+      size: result.size,
+      docs: result.docs.map((doc: any) => ({
+        id: doc.id,
+        ref: doc.ref,
+        metadata: doc.metadata,
+        exists: () => doc.exists(),
+        data: (options?: any) => sanitizeDocumentData(doc.data(options))
+      })),
+      forEach: (callback: any, thisArg?: any) => {
+        result.docs.forEach((doc: any) => {
+          callback({
+            id: doc.id,
+            ref: doc.ref,
+            metadata: doc.metadata,
+            exists: () => doc.exists(),
+            data: (options?: any) => sanitizeDocumentData(doc.data(options))
+          });
+        }, thisArg);
+      }
+    };
   } catch (error) {
     console.warn("getDocs failed or timed out. Falling back to Local Mode...", error);
     if (isConnectivityError(error)) {
       enableLocalMode();
     }
-    return getLocalDocsInternal(queryRef);
+    const localResult = getLocalDocsInternal(queryRef);
+    return {
+      empty: localResult.empty,
+      docs: localResult.docs.map((doc: any) => ({
+        id: doc.id,
+        exists: doc.exists,
+        data: () => sanitizeDocumentData(doc.data())
+      }))
+    };
   }
 }
 
 export async function getDoc(docRef: any): Promise<any> {
   if (isLocalMode) {
-    return getLocalDocInternal(docRef);
+    const localDoc = getLocalDocInternal(docRef);
+    return {
+      id: localDoc.id,
+      exists: localDoc.exists,
+      data: () => sanitizeDocumentData(localDoc.data())
+    };
   }
 
   try {
-    return await runWithTimeout(() => firestoreGetDoc(docRef), 15000);
+    const docSnap = await runWithTimeout(() => firestoreGetDoc(docRef), 15000);
+    return {
+      id: docSnap.id,
+      ref: docSnap.ref,
+      metadata: docSnap.metadata,
+      exists: () => docSnap.exists(),
+      data: (options?: any) => sanitizeDocumentData(docSnap.data(options))
+    };
   } catch (error) {
     console.warn("getDoc failed or timed out. Falling back to Local Mode...", error);
     if (isConnectivityError(error)) {
       enableLocalMode();
     }
-    return getLocalDocInternal(docRef);
+    const localDoc = getLocalDocInternal(docRef);
+    return {
+      id: localDoc.id,
+      exists: localDoc.exists,
+      data: () => sanitizeDocumentData(localDoc.data())
+    };
   }
+}
+
+// Deeply sanitizes document data to prevent rendering of Firestore internal classes as React children
+function sanitizeDocumentData(data: any): any {
+  if (data === null || data === undefined) return data;
+  if (data instanceof Date) return data;
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeDocumentData(item));
+  }
+  if (typeof data === 'object') {
+    // If it's a Firestore Timestamp, keep it!
+    if (typeof data.toDate === 'function' || (data.seconds !== undefined && data.nanoseconds !== undefined)) {
+      return data;
+    }
+    // If it has a _methodName, or looks like a Firestore class/internal object (e.g. QueryConstraint, DocumentReference)
+    if (data._methodName || (data.constructor && data.constructor.name && (data.constructor.name.includes('Query') || data.constructor.name.includes('Constraint') || data.constructor.name.includes('Reference')))) {
+      return `[Firestore ${data.constructor.name || 'Object'}]`;
+    }
+    
+    // Otherwise, sanitize keys recursively
+    const sanitized: any = {};
+    for (const key of Object.keys(data)) {
+      sanitized[key] = sanitizeDocumentData(data[key]);
+    }
+    return sanitized;
+  }
+  return data;
 }
 
 // Helper to sanitize objects for Firestore (removes undefined fields)
