@@ -51,12 +51,21 @@ export default function Footer({ onNavigate }: FooterProps) {
             </ul>
           </div>
 
-          {/* Legal / Info */}
+          {/* Facebook Follow Widget */}
           <div>
-            <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Guidelines</h3>
-            <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
-              This website is an independent community project. All rights to published stories belong to their respective authors. If you are a copyright owner and want your novel removed, contact us.
-            </p>
+            <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Follow Us</h3>
+            <div className="rounded-lg overflow-hidden bg-white dark:bg-zinc-900 inline-block p-1 border border-gray-200 dark:border-gray-700">
+              <iframe
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Ftakonovel&tabs&width=220&height=70&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false&appId"
+                width="220"
+                height="70"
+                style={{ border: 'none', overflow: 'hidden' }}
+                scrolling="no"
+                frameBorder="0"
+                allowFullScreen={true}
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              />
+            </div>
           </div>
         </div>
 
