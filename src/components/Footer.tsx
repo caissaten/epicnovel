@@ -69,14 +69,29 @@ export default function Footer({ onNavigate }: FooterProps) {
           </div>
         </div>
 
+        {/* Bagian Bawah Footer */}
         <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            &copy; {new Date().getFullYear()} EpicNovel. Built with React, Tailwind, and Firebase.
-          </p>
-          <div className="flex space-x-6 text-xs text-gray-400 dark:text-gray-500">
-            <span>Clean UI Mode</span>
-            <span>&bull;</span>
-            <span>Ultra Fast loading</span>
+          <div className="flex flex-col gap-2 sm:gap-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              &copy; {new Date().getFullYear()} EpicNovel. Built with React, Tailwind, and Firebase.
+            </p>
+            <div className="flex space-x-6 text-xs text-gray-400 dark:text-gray-500">
+              <span>Clean UI Mode</span>
+              <span>&bull;</span>
+              <span>Ultra Fast loading</span>
+            </div>
+          </div>
+
+          {/* WIDGET VISITOR COUNTER */}
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm">
+            <span className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-gray-500 uppercase">
+              Visitors:
+            </span>
+            <img 
+              src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fmiraipages.site&count_bg=%234f46e5&title_bg=%23374151&icon=&icon_color=%23e5e7eb&title=hits&edge_flat=true" 
+              alt="Visitor Count"
+              className="h-5"
+            />
           </div>
         </div>
       </div>
