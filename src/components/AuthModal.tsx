@@ -136,9 +136,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-[100] flex justify-center items-start sm:items-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in overflow-y-auto"
+      onClick={onClose}
+    >
       <div 
-        className="relative w-full max-w-md bg-white dark:bg-[#0b1329] border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-100 max-h-full sm:max-h-[90vh] flex flex-col"
+        className="relative my-auto w-full max-w-md bg-white dark:bg-[#0b1329] border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -167,7 +170,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         )}
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6">
           {/* Tabs */}
           <div className="flex bg-gray-50 dark:bg-slate-900/40 p-1 rounded-lg mb-6 border border-gray-100 dark:border-slate-800">
             <button
